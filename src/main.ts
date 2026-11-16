@@ -1,0 +1,36 @@
+import { ArrowUpRight, Monitor, Moon, Sun, Wind, createIcons } from "lucide";
+import { siteConfig, type EntryId } from "./config";
+import { required, destination } from "./dom";
+import { initPortal } from "./portal";
+import { initLeaves } from "./leaves";
+import "./styles.css";
+
+const root = required(document, "#ginkgo-wind-portal");
+const header = required(root, ".qp-header");
+header.textContent = siteConfig.name;
+header.hidden = !siteConfig.name.trim();
+document.title = siteConfig.name.trim()
+  ? `${siteConfig.name} · 银杏与风`
+  : "银杏与风";
+
+for (const link of root.querySelectorAll<HTMLAnchorElement>(".qp-window")) {
+  const id = link.dataset.site!.toLowerCase() as EntryId;
+  const entry = siteConfig.entries[id];
+  const url = destination(entry.url);
+  link.dataset.entry = id;
+  link.href = url ?? `#${id}`;
+  link.draggable = false;
+  link.setAttribute(
+    "aria-label",
+    `${entry.label}，${entry.caption}${url ? "" : "，预览展开动画"}`,
+  );
+  required(link, ".qp-word").textContent = entry.label;
+  required(link, ".qp-caption").textContent = entry.caption;
+}
+
+createIcons({
+  icons: { ArrowUpRight, Monitor, Moon, Sun, Wind },
+  attrs: { width: 18, height: 18, "stroke-width": 1.5 },
+});
+initPortal(root, siteConfig);
+initLeaves(root, siteConfig.leaves);
