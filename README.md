@@ -25,12 +25,14 @@ The production output is generated in `dist/`. Deploy its contents to a static h
 
 ## Configuration
 
-Everyday settings are centralized in `src/config.ts`, with English comments. The display name and destination URLs are empty by default. Clicking an entry with an empty URL plays its opening animation and then returns to the portal. Once a full `https://` URL is configured, the browser navigates to it after the animation. Links retain native keyboard access, context menus, and Ctrl / Command click behavior.
+Notes are authored as individual Markdown files in `src/content/notes/`. Copy `_template.md` to a new filename, edit the metadata and body, then set `draft: false`. Entries and categories are discovered automatically and sorted by date. Each note accepts `animation: unfold`, `lift`, `turn`, or `fade`. See [the writing guide](README-CN.md#写一篇随笔) for supported Markdown and metadata. Rebuild with `npm run build` before publishing changes.
+
+Everyday settings are centralized in `src/config.ts`, with English comments. Notes links to `./notes.html`; the display name and other destination URLs are empty by default. Clicking an entry with an empty URL plays its opening animation and then returns to the portal. Relative page paths and full HTTP(S) URLs navigate after the animation. Links retain native keyboard access, context menus, and Ctrl / Command click behavior.
 
 | Setting | Default | Description |
 | --- | --- | --- |
 | `name` | Empty | Name in the upper-left corner; hidden when empty |
-| `entries.*.url` | Empty | Independent destination URL for each entry |
+| `entries.*.url` | Notes: `./notes.html`; others empty | Relative path or destination URL for each entry |
 | `defaultTheme` | `system` | Initial appearance; a visitor's saved preference takes precedence |
 | `leaves.desktopCount` | 40 | Target leaf count on desktop |
 | `leaves.mobileCount` | 26 | Target leaf count on mobile |

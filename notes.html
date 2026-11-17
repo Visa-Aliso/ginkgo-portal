@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="一些随想，一些日常。把转瞬即逝的念头，轻轻放在这里。" />
+    <meta name="theme-color" content="#f8fafb" />
+    <title>随笔 Notes · 银杏与风</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <script>
+      try {
+        const theme = localStorage.getItem("ginkgo-theme") || "system";
+        document.documentElement.style.colorScheme = theme === "dark" || (theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <div id="ginkgo-notes">
+      <div class="qp-page" aria-hidden="true">
+        <canvas class="qp-canopy"></canvas>
+        <canvas class="qp-leaves"></canvas>
+      </div>
+      <a class="skip-link" href="#notes-main">跳至随笔</a>
+      <header class="site-header">
+        <a href="./index.html" class="brand" aria-label="银杏与风，返回引导页"><span class="brand-mark" aria-hidden="true">g.</span><span>银杏与风<span class="brand-divider">/</span><span class="brand-section">随笔</span></span></a>
+        <div class="header-tools">
+          <a class="home-link" href="./index.html"><i data-lucide="arrow-up-left"></i><span>回到入口</span></a>
+          <span class="tool-divider"></span>
+          <button class="icon-button qp-wind-button" aria-label="吹开银杏叶" title="让风吹一会儿"><i data-lucide="wind"></i></button>
+          <div class="theme-switch">
+            <button class="icon-button" id="theme-trigger" aria-label="切换外观" aria-expanded="false" aria-controls="theme-menu"><i data-lucide="sun" data-theme-icon="light"></i><i data-lucide="moon" data-theme-icon="dark" hidden></i></button>
+            <div id="theme-menu" class="theme-menu" role="group" aria-label="外观模式" hidden>
+              <button data-theme="light"><i data-lucide="sun"></i>浅色</button>
+              <button data-theme="dark"><i data-lucide="moon"></i>深色</button>
+              <button data-theme="system"><i data-lucide="monitor"></i>跟随系统</button>
+            </div>
+          </div>
+        </div>
+      </header>
+      <main id="notes-main">
+        <section class="intro" aria-labelledby="page-title">
+          <div class="intro-heading"><p class="eyebrow"><span></span> THOUGHTS, HERE & THERE</p><h1 id="page-title">Notes<span class="title-dot">.</span><span class="chinese-title">随笔</span></h1><p class="intro-subtitle">不必成章，也值得记下。</p></div>
+          <div class="intro-aside"><span class="aside-rule"></span><p>一些随想，一些日常。<br />把转瞬即逝的念头，<br />轻轻放在这里。</p><span class="handwritten">拾起生活的边角。</span></div>
+        </section>
+        <section class="collection" aria-label="随笔集">
+          <div class="collection-toolbar">
+            <div class="filters" role="group" aria-label="按分类筛选"><button data-category="全部" aria-pressed="true">全部<span>06</span></button><button data-category="生活观察" aria-pressed="false">生活观察</button><button data-category="灵感碎片" aria-pressed="false">灵感碎片</button><button data-category="读书手记" aria-pressed="false">读书手记</button></div>
+            <label class="search"><i data-lucide="search" aria-hidden="true"></i><input id="notes-search" type="search" placeholder="找一段文字…" aria-label="搜索随笔" autocomplete="off" /><kbd>/</kbd></label>
+          </div>
+          <div class="collection-meta"><span id="collection-label">散落的篇章</span><span id="result-count" role="status" aria-live="polite"></span></div>
+          <div id="notes-results" class="notes-results">
+            <div id="notes-grid" class="notes-grid"></div>
+            <div id="empty-state" class="empty-state" hidden><i data-lucide="search"></i><h2>这一页，暂时留白。</h2><p>换一个词，或去其他分类看看。</p><button id="reset-search">看看全部随笔 <span aria-hidden="true">↗</span></button></div>
+          </div>
+          <div class="collection-end"><span></span><p>暂且写到这里，剩下的交给风。</p><span></span></div>
+        </section>
+      </main>
+      <footer class="site-footer"><span>银杏与风 <span class="footer-dot">·</span> 一处安放念头的地方</span><span class="footer-note">示例随笔集 <span class="footer-dot">/</span> 慢慢写，慢慢来 <i data-lucide="feather" aria-hidden="true"></i></span></footer>
+      <p id="announcement" class="sr-only" role="status"></p>
+      <dialog id="reader" aria-labelledby="reader-title">
+        <div class="reader-tools"><span>NOTES <span class="footer-dot">/</span> 一页随笔</span><button class="icon-button" id="close-reader" aria-label="关闭阅读"><i data-lucide="x"></i></button></div>
+        <article class="reader-article"><p id="reader-meta" class="eyebrow"></p><h2 id="reader-title" tabindex="-1"></h2><div id="reader-content"></div><p class="reader-signoff">— 记于日常</p></article>
+        <div class="reader-footer"><button id="previous-note"><i data-lucide="arrow-left"></i>上一篇</button><span id="reader-position"></span><button id="next-note">下一篇<i data-lucide="arrow-right"></i></button></div>
+      </dialog>
+    </div>
+    <noscript><p class="noscript-message">请启用 JavaScript 以查看随笔、筛选和阅读内容。<a href="./index.html">返回入口</a></p></noscript>
+    <script type="module" src="/src/notes.ts"></script>
+  </body>
+</html>

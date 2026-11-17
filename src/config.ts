@@ -4,7 +4,7 @@ export type EntryId = "blog" | "profile" | "notes";
 export interface EntryConfig {
   label: string;
   caption: string;
-  /** Full HTTPS URL. Leave empty to preview the animation and return to the portal. */
+  /** HTTP(S) URL or relative page path. Leave empty to preview the animation. */
   url: string;
 }
 
@@ -49,7 +49,7 @@ export const siteConfig: SiteConfig = {
   entries: {
     blog: { label: "Blog", caption: "文章与记录", url: "" },
     profile: { label: "Profile", caption: "关于我", url: "" },
-    notes: { label: "Notes", caption: "一些随想", url: "" },
+    notes: { label: "Notes", caption: "一些随想", url: "./notes.html" },
   },
   motion: {
     responsiveMotion: true,

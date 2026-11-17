@@ -11,7 +11,7 @@ export function required<T extends Element = HTMLElement>(
 export function destination(url: string): string | null {
   if (!url.trim()) return null;
   try {
-    const parsed = new URL(url);
+    const parsed = new URL(url, document.baseURI);
     return ["https:", "http:"].includes(parsed.protocol) ? parsed.href : null;
   } catch {
     return null;

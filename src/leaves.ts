@@ -36,7 +36,14 @@ interface Leaf extends Point {
   arrival?: { from: Point; to: Point; started: number; duration: number };
 }
 
-export function initLeaves(root: HTMLElement, settings: LeafConfig) {
+interface LeafInteractionOptions {
+  target?: HTMLElement;
+  cardSelector?: string;
+  ignoreSelector?: string;
+  enabled?: () => boolean;
+}
+
+export function initLeaves(root: HTMLElement, settings: LeafConfig, interaction: LeafInteractionOptions = {}) {
   if (!settings.enabled) {
     required(root, ".qp-wind-button").hidden = true;
     return;
@@ -49,6 +56,13 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig) {
     hitCtx = document.createElement("canvas").getContext("2d")!;
   const windButton = required<HTMLButtonElement>(root, ".qp-wind-button"),
     reduced = matchMedia("(prefers-reduced-motion: reduce)");
+  const eventTarget = interaction.target ?? page;
+  const cardSelector = interaction.cardSelector ?? ".qp-window";
+  const ignoreSelector = interaction.ignoreSelector ?? ".qp-toolbar";
+  const ignoresPointer = (event: PointerEvent) =>
+    interaction.enabled?.() === false ||
+    page.classList.contains("qp-entering") ||
+    Boolean((event.target as Element).closest(ignoreSelector));
   if (!ctx || !bg || !hitCtx) return;
   const probe = document.createElement("span");
   probe.className = "qp-leaf-probe";
@@ -314,7 +328,7 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig) {
       ),
       scale = (small ? 0.76 : 1) * settings.size;
     const base = page.getBoundingClientRect(),
-      cards = [...root.querySelectorAll<HTMLElement>(".qp-window")].map((e) =>
+      cards = [...root.querySelectorAll<HTMLElement>(cardSelector)].map((e) =>
         e.getBoundingClientRect(),
       );
     const placements = [
@@ -326,6 +340,7 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig) {
     ];
     placements.slice(0, count).forEach(([i, x, y, size], n) => {
       const b = cards[i];
+      if (!b || b.bottom < base.top || b.top > base.bottom) return;
       leaves.push(
         makeLeaf(
           b.left - base.left + b.width * x,
@@ -350,8 +365,9 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig) {
       [0.26, 0.54],
       [0.61, 0.96],
     ];
-    for (let i = 5; i < count; i++) {
-      const edge = edges[(i - 5) % edges.length];
+    const placedCount = leaves.length;
+    for (let i = placedCount; i < count; i++) {
+      const edge = edges[(i - placedCount) % edges.length];
       const air = i >= count - 5;
       const x = clamp(
         width * (edge[0] + (random() - 0.5) * 0.16),
@@ -665,10 +681,10 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig) {
     e.stopImmediatePropagation();
     suppressClick = { ...blocked, until: performance.now() + 600 };
     blocked = null;
-    if (page.hasPointerCapture?.(e.pointerId))
-      page.releasePointerCapture(e.pointerId);
+    if (eventTarget.hasPointerCapture?.(e.pointerId))
+      eventTarget.releasePointerCapture(e.pointerId);
   }
-  page.addEventListener(
+  eventTarget.addEventListener(
     "pointerdown",
     (e) => {
       if (
@@ -677,8 +693,7 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig) {
         e.metaKey ||
         e.shiftKey ||
         e.altKey ||
-        page.classList.contains("qp-entering") ||
-        (e.target as Element).closest(".qp-toolbar")
+        ignoresPointer(e)
       )
         return;
       suppressClick = null;
@@ -689,14 +704,14 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig) {
         gust(p);
         e.preventDefault();
         e.stopImmediatePropagation();
-        page.setPointerCapture(e.pointerId);
-      } else if (!(e.target as Element).closest(".qp-window"))
+        eventTarget.setPointerCapture(e.pointerId);
+      } else if (!(e.target as Element).closest(cardSelector))
         gust(p, 0.9, true);
     },
     { capture: true },
   );
-  page.addEventListener("pointerup", stopPointer, { capture: true });
-  page.addEventListener(
+  eventTarget.addEventListener("pointerup", stopPointer, { capture: true });
+  eventTarget.addEventListener(
     "pointercancel",
     (e) => {
       if (blocked?.id === e.pointerId) {
@@ -706,7 +721,7 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig) {
     },
     { capture: true },
   );
-  page.addEventListener(
+  eventTarget.addEventListener(
     "click",
     (e) => {
       if (
@@ -723,13 +738,12 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig) {
     },
     { capture: true },
   );
-  page.addEventListener(
+  eventTarget.addEventListener(
     "pointermove",
     (e) => {
       if (
         reduced.matches ||
-        page.classList.contains("qp-entering") ||
-        (e.target as Element).closest(".qp-toolbar")
+        ignoresPointer(e)
       )
         return;
       const now = performance.now(),
@@ -776,7 +790,7 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig) {
     },
     { capture: true },
   );
-  page.addEventListener("pointerleave", () => {
+  eventTarget.addEventListener("pointerleave", () => {
     lastPointer = null;
   });
   windButton.addEventListener("click", () => clearAll());
