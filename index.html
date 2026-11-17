@@ -10,23 +10,8 @@
     <meta name="theme-color" content="#f8fafb" />
     <title>银杏与风</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <script>
-      const html = document.documentElement;
-      html.classList.add("portal-loading");
-      html.dataset.portalBootTimer = String(setTimeout(() => {
-        html.classList.remove("portal-loading");
-        delete html.dataset.portalBootTimer;
-      }, 4000));
-      try {
-        const preference = localStorage.getItem("ginkgo-theme") || "system";
-        const dark =
-          preference === "dark" ||
-          (preference === "system" &&
-            matchMedia("(prefers-color-scheme: dark)").matches);
-        document.documentElement.style.colorScheme = dark ? "dark" : "light";
-      } catch {}
-    </script>
-    <link rel="stylesheet" href="/src/styles.css" />
+    <!-- site:bootstrap -->
+    <link rel="stylesheet" href="/src/pages/portal/styles.css" />
   </head>
   <body>
     <div id="ginkgo-wind-portal">
@@ -34,7 +19,7 @@
         <canvas class="qp-canopy" aria-hidden="true"></canvas>
         <canvas class="qp-leaves" aria-hidden="true"></canvas>
         <div class="qp-toolbar">
-          <header class="qp-header"></header>
+          <header class="qp-header site-brand"><span class="site-wordmark" data-site-name>Ginkgo</span></header>
           <div class="qp-tools">
             <button
               type="button"
@@ -186,6 +171,6 @@
     <noscript
       ><p class="no-script">请启用 JavaScript 以体验银杏与风。</p></noscript
     >
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/src/pages/portal/index.ts"></script>
   </body>
 </html>

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { bindWindControl, WIND_HOLD_MS } from '../src/wind-control.ts';
+import { bindWindControl, WIND_HOLD_MS } from '../src/effects/wind-control.ts';
 
 class Button extends EventTarget {
   disabled = false;
@@ -17,7 +17,7 @@ function emit(target, type, values = {}) {
   target.dispatchEvent(event);
   return event;
 }
-function environment(store = new Map(), blocked = false) {
+function environment(store = new Map(), blocked = false, options = {}) {
   let now = 0, sequence = 0;
   const timers = new Map();
   const window = new EventTarget(), document = new EventTarget();
@@ -38,7 +38,7 @@ function environment(store = new Map(), blocked = false) {
   };
   const button = new Button(), changes = [];
   let clicks = 0;
-  const control = bindWindControl(button, { clear: () => clicks++, pausedChanged: value => changes.push(value) });
+  const control = bindWindControl(button, { clear: () => clicks++, pausedChanged: value => changes.push(value) }, options);
   const advance = milliseconds => {
     now += milliseconds;
     for (const [id, timer] of [...timers]) if (timer.at <= now) { timers.delete(id); timer.callback(); }
@@ -123,4 +123,35 @@ test('blocked storage still allows toggling and disposing cancels pending timers
   env.down(); env.advance(200); env.control.dispose(); env.advance(1000);
   assert.deepEqual(env.changes, [true]);
   assert.equal(env.timers.size, 0);
+});
+
+
+test('Profile shares paused indicators and hold gestures while keeping its local default', () => {
+  const store = new Map([['ginkgo-leaves-paused', 'false']]);
+  const env = environment(store, false, { initialPaused: true, persist: false });
+  assert.equal(env.control.paused, true);
+  assert.equal(env.button.dataset.leavesPaused, 'true');
+  assert.equal(env.button.attrs.get('aria-pressed'), 'true');
+  assert.equal(env.button.attrs.get('aria-label'), '银杏叶已暂停；单击吹风，长按恢复生成');
+  env.down(); env.advance(100); env.up();
+  assert.equal(env.control.paused, true);
+  assert.equal(env.clicks, 1);
+  env.down(); env.advance(WIND_HOLD_MS); env.up();
+  assert.equal(env.control.paused, false);
+  assert.equal(env.button.dataset.leavesPaused, 'false');
+  assert.equal(env.button.attrs.get('aria-pressed'), 'false');
+  assert.equal(env.button.attrs.get('aria-label'), '单击吹开银杏叶，长按暂停生成');
+  assert.equal(env.clicks, 1);
+  emit(env.window, 'storage', { key: 'ginkgo-leaves-paused' });
+  assert.equal(env.control.paused, false);
+  emit(env.button, 'keydown', { key: 'Enter', repeat: false });
+  env.advance(WIND_HOLD_MS);
+  emit(env.button, 'keyup', { key: 'Enter' });
+  assert.equal(env.control.paused, true);
+  env.down(); env.advance(WIND_HOLD_MS); env.up();
+  emit(env.window, 'pageshow');
+  assert.equal(env.control.paused, true);
+  assert.equal(store.get('ginkgo-leaves-paused'), 'false');
+  assert.equal(env.clicks, 1);
+  env.control.dispose();
 });

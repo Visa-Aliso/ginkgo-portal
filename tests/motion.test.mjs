@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createReaderMotion } from '../src/reader-motion.ts';
-import { createCollectionMotion, createPaperMotion } from '../src/notes-motion.ts';
+import { createReaderMotion } from '../src/pages/notes/reader-motion.ts';
+import { createCollectionMotion } from '../src/pages/notes/collection-motion.ts';
+import { createPaperMotion } from '../src/pages/notes/paper-motion.ts';
 
 const config = { transitionSpeed: 1, responsiveMotion: true, softness: 1.1, breeze: true };
 function environment() {
@@ -28,7 +29,7 @@ function environment() {
     animations.push(animation);
     return animation;
   }
-  const style = () => ({ values: new Map(), setProperty(name, value) { this.values.set(name, value); } });
+  const style = () => ({ values: new Map(), setProperty(name, value) { this.values.set(name, value); }, getPropertyValue(name) { return this.values.get(name) || ""; }, removeProperty(name) { this.values.delete(name); } });
   const tick = now => { const pending = [...callbacks.values()]; callbacks.clear(); pending.forEach(callback => callback(now)); };
   return { media, callbacks, events, animations, animate, style, tick };
 }
@@ -48,10 +49,6 @@ test('reader transitions are unhurried, share portal speed, and supersede stale 
     current.forEach(animation => animation.finish());
     await opening;
   }
-  const change = motion.open(card, 'turn', true, -1);
-  assert.equal(env.animations.at(-1).options.duration, 380);
-  env.animations.at(-1).finish();
-  await change;
   const closing = motion.close(card, 'turn');
   assert.equal(env.animations.at(-1).options.duration, 420);
   const reopening = motion.open(card, 'lift');
@@ -104,10 +101,12 @@ test('category layout reuses retained cards, cleans ghosts, and cancels rapid ch
 test('paper follows pointer with spring inertia, returns to rest, and skips touch', () => {
   const env = environment();
   const grid = env.events();
-  const paper = { isConnected: true, style: env.style(), parentElement: { getBoundingClientRect: () => ({ left: 0, top: 0, width: 320, height: 326 }) } };
+  const classes = new Set();
+  const paper = { classList: { add: name => classes.add(name), remove: name => classes.delete(name) }, isConnected: true, style: env.style(), parentElement: { getBoundingClientRect: () => ({ left: 0, top: 0, width: 320, height: 326 }) } };
   const motion = createPaperMotion(grid, config, () => false);
   const target = { closest: () => paper };
   grid.listeners.get('pointermove')({ target, clientX: 310, clientY: 40, pointerType: 'mouse', buttons: 0 });
+  assert.ok(classes.has('paper-moving'));
   for (let i = 1; i <= 90; i++) env.tick(i * 16.667);
   assert.ok(parseFloat(paper.style.values.get('--paper-ry')) > 3);
   assert.ok(parseFloat(paper.style.values.get('--paper-y')) < -6);
@@ -117,8 +116,67 @@ test('paper follows pointer with spring inertia, returns to rest, and skips touc
   assert.equal(paper.style.values.get('--paper-ry'), '0deg');
   assert.equal(paper.style.values.get('--paper-y'), '0px');
   assert.equal(paper.style.values.get('--paper-scale'), '1');
+  assert.ok(!classes.has('paper-moving'));
   assert.equal(env.callbacks.size, 0);
   grid.listeners.get('pointermove')({ target, clientX: 310, clientY: 40, pointerType: 'touch', buttons: 0 });
   assert.equal(env.callbacks.size, 0);
   motion.reset();
+});
+
+test('reader turns keep old content until exit and animate new content and height together', async () => {
+  const env = environment();
+  let height = 480, content = 'old';
+  const classes = new Set();
+  const article = { animate: env.animate };
+  const dialog = { open: true, animate: env.animate, style: env.style(), querySelector: () => article,
+    classList: { add: name => classes.add(name), remove: name => classes.delete(name) },
+    getBoundingClientRect: () => ({ height }) };
+  const motion = createReaderMotion(dialog, config);
+  const turn = motion.change(1, () => { content = 'new'; height = 650; });
+  assert.equal(content, 'old');
+  assert.equal(env.animations.length, 1);
+  assert.equal(env.animations[0].frames.at(-1).transform, 'translateX(-24px)');
+  assert.equal(dialog.style.getPropertyValue('height'), '480px');
+  env.animations[0].finish();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(content, 'new');
+  assert.equal(env.animations[1].frames[0].transform, 'translateX(24px)');
+  assert.deepEqual(env.animations[2].frames, [{ height: '480px' }, { height: '650px' }]);
+  env.animations.slice(1).forEach(animation => animation.finish());
+  assert.equal(await turn, true);
+  assert.equal(dialog.style.getPropertyValue('height'), '');
+  assert.ok(!classes.has('reader-changing'));
+  assert.ok(env.animations.every(animation => animation.cancelled));
+});
+
+test('rapid page turns and closing cancel stale content commits; reduced motion stays immediate', async () => {
+  const env = environment();
+  let content = 'first';
+  const article = { animate: env.animate };
+  const dialog = { open: true, animate: env.animate, style: env.style(), querySelector: () => article,
+    classList: { add() {}, remove() {} }, getBoundingClientRect: () => ({ height: 480 }) };
+  const motion = createReaderMotion(dialog, config);
+  const obsolete = motion.change(1, () => { content = 'obsolete'; });
+  const latest = motion.change(-1, () => { content = 'latest'; });
+  assert.equal(await obsolete, false);
+  assert.equal(content, 'first');
+  assert.equal(env.animations.at(-1).frames.at(-1).transform, 'translateX(24px)');
+  env.animations.at(-1).finish();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(content, 'latest');
+  assert.equal(env.animations.at(-1).frames[0].transform, 'translateX(-24px)');
+  env.animations.at(-1).finish();
+  assert.equal(await latest, true);
+  const interrupted = motion.change(1, () => { content = 'must not appear'; });
+  const closing = motion.close(null, 'fade');
+  assert.equal(await interrupted, false);
+  env.animations.at(-1).finish();
+  assert.equal(await closing, true);
+  assert.equal(content, 'latest');
+  assert.equal(dialog.style.getPropertyValue('height'), '');
+  env.media.get('(prefers-reduced-motion: reduce)').matches = true;
+  const count = env.animations.length;
+  assert.equal(await motion.change(1, () => { content = 'reduced'; }), true);
+  assert.equal(content, 'reduced');
+  assert.equal(env.animations.length, count);
 });

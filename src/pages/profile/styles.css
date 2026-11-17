@@ -1,0 +1,73 @@
+/* Single-column academic document. Shared styles contain no Notes components. */
+@import "../../shared/styles/document.css";
+
+#ginkgo-profile::before { display: none; }
+#ginkgo-profile .qp-canopy { display: none; }
+#profile-main { margin: auto; width: min(760px, calc(100% - 64px)); padding: 20px 0 0; }
+.profile-header { text-align: center; margin: 0 auto 34px; }
+.profile-avatar-placeholder, .profile-avatar { display: grid; place-items: center; width: 82px; height: 82px; margin: 0 auto 17px; border-radius: 50%; object-fit: cover; background: light-dark(#e8eef5, #314452); color: var(--notes-blue); font: italic 44px/1 var(--notes-serif); }
+#profile-name { margin: 0 0 10px; font: 400 39px/1.2 var(--notes-serif); letter-spacing: -.025em; }
+.profile-role, .profile-affiliation { margin: 5px 0; font-size: 13px; line-height: 1.7; color: var(--notes-muted); }
+.profile-bio { max-width: 660px; margin: 21px auto 14px; font-size: 13px; line-height: 1.95; color: var(--notes-ink); }
+.profile-bio p { margin: 6px 0; }
+.profile-bio strong { font-weight: 600; }
+.profile-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px 25px; margin-top: 18px; }
+.profile-links a, .record-links a { display: inline-flex; align-items: center; gap: 7px; color: var(--notes-blue); font-size: 12px; line-height: 1.7; }
+.profile-links a { padding: 4px 0; }
+.profile-links svg { width: 15px; height: 15px; }
+.profile-links svg:last-child { display: none; }
+.profile-links a:hover, .record-links a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.profile-section { margin-bottom: 25px; scroll-margin-top: 25px; }
+.section-heading { display: flex; gap: 14px; align-items: baseline; border-bottom: 1px solid var(--notes-line); padding-bottom: 9px; margin-bottom: 15px; }
+.section-heading h2 { margin: 0; font: 500 20px/1.5 var(--notes-serif); letter-spacing: .035em; }
+.section-english { color: var(--notes-muted); font: 14px var(--notes-serif); }
+.profile-empty p { margin: 0; color: var(--notes-muted); font-size: 12px; line-height: 1.8; }
+.profile-record { display: grid; grid-template-columns: 28px minmax(0, 1fr); padding: 0 0 16px; }
+.profile-record:last-child { padding-bottom: 0; }
+.record-dated { grid-template-columns: 58px minmax(0, 1fr); }
+.record-education { grid-template-columns: 110px minmax(0, 1fr); }
+.record-meta { padding-top: 2px; color: var(--notes-muted); font: 12px/1.8 var(--notes-serif); white-space: pre-line; }
+.record-title { margin: 0 0 5px; font: 600 15px/1.7 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; overflow-wrap: anywhere; }
+.record-title a { display: inline-flex; align-items: baseline; gap: 8px; }
+.record-title a svg { width: 12px; height: 12px; color: var(--notes-muted); flex-shrink: 0; }
+.record-title a:hover { color: var(--notes-blue); }
+.record-labels, .record-detail { margin: 4px 0; color: var(--notes-muted); font-size: 12px; line-height: 1.8; }
+.record-description { color: var(--notes-ink); font-size: 13px; line-height: 1.9; overflow-wrap: anywhere; }
+.record-description p, .record-detail p { margin: 3px 0; }
+.record-description a, .record-detail a { color: var(--notes-blue); text-decoration: underline; }
+.record-links { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 7px; }
+.record-links svg { width: 12px; height: 12px; }
+.record-award { margin: 5px 0; font-size: 12px; color: light-dark(#8c7747, #d9c38a); }
+.record-logo { width: 40px; height: 40px; object-fit: contain; float: right; margin: 0 0 8px 15px; }
+.profile-more { border: 0; background: transparent; color: var(--notes-blue); font-size: 12px; padding: 8px 0; margin: 8px 0 0 28px; }
+.profile-footer { display: flex; justify-content: space-between; border-top: 1px solid var(--notes-line); padding: 20px 0 30px; margin-top: 35px; color: var(--notes-muted); font-size: 10px; }
+@media (max-width: 600px) {
+  #profile-main { width: calc(100% - 40px); padding-top: 16px; }
+  .profile-header { margin-bottom: 30px; }
+  #profile-name { font-size: 34px; }
+  .profile-bio { text-align: left; font-size: 12px; }
+  .section-heading h2 { font-size: 18px; }
+  .section-english { font-size: 12px; }
+  .record-description { font-size: 12px; }
+  .record-education { grid-template-columns: 80px minmax(0, 1fr); }
+}
+@media (max-width: 520px) {
+  #ginkgo-profile .site-header { gap: 8px; }
+}
+@page { size: A4; margin: 15mm 18mm; }
+@media print {
+  :root { color-scheme: light !important; --notes-ink: #222; --notes-muted: #555; --notes-line: #ccc; --notes-blue: #334e83; background: white; }
+  body { background: white; min-width: 0; }
+  #ginkgo-profile .site-header, #ginkgo-profile .qp-page, .skip-link, #announcement, .profile-more, .noscript-message, .page-arrival-cover { display: none !important; }
+  #profile-main { width: 100%; padding: 0; }
+  .profile-header { margin-bottom: 7mm; }
+  .profile-avatar-placeholder, .profile-avatar { width: 18mm; height: 18mm; margin-bottom: 3mm; }
+  #profile-name { font-size: 25pt; }
+  .profile-section { margin-bottom: 5mm; }
+  .section-heading { margin-bottom: 3mm; padding-bottom: 2mm; break-after: avoid; }
+  .section-heading h2 { font-size: 14pt; }
+  .profile-record { break-inside: avoid; }
+  .profile-record[hidden] { display: grid !important; }
+  .record-description, .profile-bio { font-size: 9pt; }
+  .profile-footer { margin-top: 6mm; padding: 3mm 0 0; }
+}

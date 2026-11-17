@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="个人简介、教育经历、论文、开源贡献与项目经历。" />
+    <meta name="theme-color" content="#f8fafb" />
+    <title>Ginkgo · Profile · 银杏与风</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <style>
+      html.profile-arriving #ginkgo-profile { opacity: 0; }
+    </style>
+    <!-- site:bootstrap -->
+    <link rel="stylesheet" href="/src/pages/profile/styles.css" />
+  </head>
+  <body>
+    <div id="ginkgo-profile">
+      <div class="qp-page" aria-hidden="true"><canvas class="qp-canopy"></canvas><canvas class="qp-leaves"></canvas></div>
+      <a class="skip-link" href="#profile-main">跳至个人介绍</a>
+      <header class="site-header">
+        <div class="site-brand">
+          <a href="./index.html" class="site-wordmark" data-site-name aria-label="Ginkgo，返回引导页">Ginkgo</a>
+          <span class="brand-divider" aria-hidden="true">/</span>
+          <span class="brand-section" aria-current="page">关于我</span>
+        </div>
+        <div class="header-tools">
+          <a class="home-link" href="./index.html"><i data-lucide="arrow-up-left"></i><span>回到入口</span></a>
+          <span class="tool-divider"></span>
+          <button class="icon-button qp-wind-button" aria-label="银杏叶已暂停；单击吹风，长按恢复生成" title="银杏叶已暂停；单击吹风，长按恢复生成" aria-pressed="true" data-leaves-paused="true"><i data-lucide="wind"></i><svg class="wind-hold-ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" /></svg></button>
+          <div class="theme-switch">
+            <button class="icon-button" id="theme-trigger" aria-label="切换外观" aria-expanded="false" aria-controls="theme-menu"><i data-lucide="sun" data-theme-icon="light"></i><i data-lucide="moon" data-theme-icon="dark" hidden></i></button>
+            <div id="theme-menu" class="theme-menu" role="group" aria-label="外观模式" hidden>
+              <button data-theme="light"><i data-lucide="sun"></i>浅色</button>
+              <button data-theme="dark"><i data-lucide="moon"></i>深色</button>
+              <button data-theme="system"><i data-lucide="monitor"></i>跟随系统</button>
+            </div>
+          </div>
+        </div>
+
+      </header>
+      <main id="profile-main" class="profile-document">
+        <header class="profile-header">
+          <div class="profile-avatar-placeholder" aria-hidden="true">g.</div>
+          <h1 id="profile-name">Ginkgo</h1>
+          <p id="profile-role" class="profile-role"></p>
+          <p id="profile-affiliation" class="profile-affiliation" hidden></p>
+          <div id="profile-bio" class="profile-bio"></div>
+          <div id="profile-links" class="profile-links"></div>
+        </header>
+        <div id="profile-sections"></div>
+        <footer class="profile-footer"><span id="profile-copyright"></span><span>Profile</span></footer>
+      </main>
+      <p id="announcement" class="sr-only" role="status"></p>
+    </div>
+    <noscript><p class="noscript-message">请启用 JavaScript 以查看完整个人资料。<a href="./index.html">返回入口</a></p></noscript>
+    <script type="module" src="/src/pages/profile/index.ts"></script>
+  </body>
+</html>

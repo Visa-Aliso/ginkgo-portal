@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { initTheme } from '../src/theme.ts';
+import { initTheme } from '../src/shared/theme.ts';
 
 class Element extends EventTarget {
   dataset = {};

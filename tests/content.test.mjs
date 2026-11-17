@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { loadNotes } from '../src/note-content.ts';
-import { markdownToHtml, readFrontMatter } from '../src/markdown.ts';
+import { loadNotes } from '../src/pages/notes/content.ts';
+import { markdownToHtml, readFrontMatter } from '../src/shared/markdown.ts';
 
 const note = (metadata = '') => `---\ntitle: 测试随笔\ndate: 2026-11-17\ncategory: 日常\nexcerpt: 摘要\n${metadata}---\n\n正文。`;
 test('content loader excludes drafts/templates, orders dates, and accepts custom categories', () => {

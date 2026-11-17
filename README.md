@@ -27,14 +27,14 @@ The production output is generated in `dist/`. Deploy its contents to a static h
 
 ## Configuration
 
-Notes are authored as individual Markdown files in `src/content/notes/`. Copy `_template.md` to a new filename, edit the metadata and body, then set `draft: false`. Entries and categories are discovered automatically and sorted by date. Each note accepts `animation: unfold`, `lift`, `turn`, or `fade`. See [the writing guide](README-CN.md#写一篇随笔) for supported Markdown and metadata. Rebuild with `npm run build` before publishing changes.
+Notes are authored as individual Markdown files in `content/notes/`. Copy `_template.md` to a new filename, edit the metadata and body, then set `draft: false`. Entries and categories are discovered automatically and sorted by date. Each note accepts `animation: unfold`, `lift`, `turn`, or `fade`. See [the writing guide](README-CN.md#写一篇随笔) for supported Markdown and metadata. Rebuild with `npm run build` before publishing changes.
 
-Everyday settings are centralized in `src/config.ts`, with English comments. Notes links to `./notes.html`; the display name and other destination URLs are empty by default. Clicking an entry with an empty URL plays its opening animation and then returns to the portal. Relative page paths and full HTTP(S) URLs navigate after the animation. Links retain native keyboard access, context menus, and Ctrl / Command click behavior.
+Edit `config/site.config`, `config/profile.config`, and `config/notes.config` for site settings and page content. These are JSON files: use double quotes, no comments, and no trailing commas. See [the configuration guide](docs/configuration.md). Development reloads on save; production requires a rebuild. Notes links to `./notes.html` and Profile to `./profile.html`; Blog is empty by default. Clicking an entry with an empty URL plays its opening animation and then returns to the portal. Relative page paths and full HTTP(S) URLs navigate after the animation. Links retain native keyboard access, context menus, and Ctrl / Command click behavior.
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| `name` | Empty | Name in the upper-left corner; hidden when empty |
-| `entries.*.url` | Notes: `./notes.html`; others empty | Relative path or destination URL for each entry |
+| `name` | `Ginkgo` | Shared wordmark; an empty value falls back to Ginkgo |
+| `entries.*.url` | Notes: `./notes.html`; Profile: `./profile.html`; Blog empty | Relative path or destination URL for each entry |
 | `defaultTheme` | `system` | Initial appearance; a visitor's saved preference takes precedence |
 | `leaves.desktopCount` | 40 | Target leaf count on desktop |
 | `leaves.mobileCount` | 26 | Target leaf count on mobile |
@@ -48,7 +48,7 @@ Everyday settings are centralized in `src/config.ts`, with English comments. Not
 | `leaves.maxFps` | 45 | Maximum leaf rendering frame rate |
 | `motion.transitionSpeed` | 1 | Entry animation speed multiplier; higher values are faster |
 
-Colors are defined with CSS variables in `src/styles.css`: `--qp-*` controls the paper surfaces and background, while `--leaf-*` controls the ginkgo leaves. Leaf shapes, veins, and shadows are drawn with Canvas and require no image assets.
+Colors are defined with CSS variables in `src/pages/portal/styles.css`: `--qp-*` controls the paper surfaces and background, while `--leaf-*` controls the ginkgo leaves. Leaf shapes, veins, and shadows are drawn with Canvas and require no image assets.
 
 ## Interaction and accessibility
 
@@ -62,24 +62,22 @@ Colors are defined with CSS variables in `src/styles.css`: `--qp-*` controls the
 
 ## Project structure
 
-- `src/config.ts`: everyday settings and type definitions
-- `src/main.ts`: content and icon initialization
-- `src/portal.ts`: spring motion, opening animations, and navigation
-- `src/leaves.ts`: leaf rendering, wind, replenishment, and hit detection
-- `src/styles.css`: surface appearance, layout, and light/dark palettes
-
-- `src/notes.ts`, `src/notes.css`: notes list, reader and page layout
-- `src/notes-motion.ts`, `src/reader-motion.ts`: card and reader transitions
-- `src/page-transition.ts`: document preloading and portal-to-notes handoff
-- `src/theme.ts`, `src/preferences.ts`: shared appearance controls and storage
-- `src/wind-control.ts`, `src/controls.css`: shared hold gesture and status display
-- `src/notes-data.ts`, `src/note-content.ts`: content discovery and validation
-- `src/content/notes/`: Markdown notes and authoring template
-- `scripts/`: pre-build content checks and post-build asset checks
-- `tests/`: content, gesture, engine, theme and motion regressions
+- `config/*.config`: JSON site, Profile, and Notes settings, separate from code.
+- `content/notes/`: Markdown notes and authoring template.
+- `src/pages/portal/`: homepage and entrance animation.
+- `src/pages/notes/`: cards, filtering, reader, spring and layout motion.
+- `src/pages/profile/`: profile rendering, disclosure motion, and print styles.
+- `src/shared/`: theme, wordmark, early boot, transitions, and document styles.
+- `src/effects/`: leaf engine and wind controls.
+- `src/config/`: internal config types, validators, and imports.
+- `build/config-plugin.ts`: compile validated config and synchronous first-paint settings.
+- `scripts/`, `tests/`: config, content, motion, resource lifecycle, and build checks.
 
 ## Verification and release
 
-Run `npm run verify` before publishing: it executes all tests, TypeScript checks, Markdown validation, the production build, and build-output checks. Both documents load their styles from HTML rather than waiting for JavaScript. Publish the entire `dist/` directory and use `npm run preview` for a production-mode visual check.
+Run `npm run verify` before publishing: it executes all tests, TypeScript checks, config and Markdown validation, the production build, and build-output checks. All three documents load their styles from HTML rather than waiting for JavaScript. Publish the entire `dist/` directory and use `npm run preview` for a production-mode visual check.
 
 See [the architecture and maintenance notes](docs/architecture.md) for lifecycle details and browser checks. Automated checks do not replace visual verification on real browsers.
+
+
+Profile is a single-column academic document based on Asipe's content structure. Edit `config/profile.config`; see [the configuration guide](docs/profile.md). Leaves start disabled on every Profile visit and use the same click-to-clear / hold-to-pause gestures and pause badge as other pages, without affecting their preferences. A4 print styles hide controls and reveal all records.
