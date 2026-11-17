@@ -7,12 +7,39 @@
     <meta name="theme-color" content="#f8fafb" />
     <title>随笔 Notes · 银杏与风</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <style>
+      html.notes-arriving::after { content: ""; position: fixed; inset: 0; z-index: 2147483647; background: var(--notes-arrival-color, #4261ce); pointer-events: none; }
+    </style>
     <script>
       try {
         const theme = localStorage.getItem("ginkgo-theme") || "system";
         document.documentElement.style.colorScheme = theme === "dark" || (theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
       } catch {}
+      try {
+        const key = "ginkgo-notes-arrival";
+        const raw = sessionStorage.getItem(key);
+        sessionStorage.removeItem(key);
+        const arrival = raw && JSON.parse(raw);
+        const navigation = performance.getEntriesByType("navigation")[0];
+        if (arrival && navigation?.type !== "reload" &&
+            arrival.path === location.pathname + location.search &&
+            Date.now() - arrival.time >= 0 && Date.now() - arrival.time < 15000 &&
+            !matchMedia("(prefers-reduced-motion: reduce)").matches &&
+            typeof arrival.color === "string" && CSS.supports("color", arrival.color)) {
+          const html = document.documentElement;
+          html.style.setProperty("--notes-arrival-color", arrival.color);
+          html.dataset.arrivalSpeed = String(Math.max(.2, Math.min(3, Number(arrival.speed) || 1)));
+          html.classList.add("notes-arriving");
+          html.dataset.arrivalTimeout = String(setTimeout(() => {
+            html.classList.remove("notes-arriving");
+            html.style.removeProperty("--notes-arrival-color");
+            delete html.dataset.arrivalSpeed;
+            delete html.dataset.arrivalTimeout;
+          }, 5000));
+        }
+      } catch {}
     </script>
+    <link rel="stylesheet" href="/src/notes.css" />
   </head>
   <body>
     <div id="ginkgo-notes">
@@ -26,7 +53,7 @@
         <div class="header-tools">
           <a class="home-link" href="./index.html"><i data-lucide="arrow-up-left"></i><span>回到入口</span></a>
           <span class="tool-divider"></span>
-          <button class="icon-button qp-wind-button" aria-label="吹开银杏叶" title="让风吹一会儿"><i data-lucide="wind"></i></button>
+          <button class="icon-button qp-wind-button" aria-label="单击吹开银杏叶，长按暂停生成" title="单击吹风，长按暂停或恢复银杏叶"><i data-lucide="wind"></i><svg class="wind-hold-ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" /></svg></button>
           <div class="theme-switch">
             <button class="icon-button" id="theme-trigger" aria-label="切换外观" aria-expanded="false" aria-controls="theme-menu"><i data-lucide="sun" data-theme-icon="light"></i><i data-lucide="moon" data-theme-icon="dark" hidden></i></button>
             <div id="theme-menu" class="theme-menu" role="group" aria-label="外观模式" hidden>

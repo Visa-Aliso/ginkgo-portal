@@ -1,5 +1,7 @@
 import type { SiteConfig, EntryId } from "./config";
 import { required, destination } from "./dom";
+import { initTheme } from "./theme.ts";
+import { rememberNotesArrival, warmNotesPage } from "./page-transition";
 
 type Transform = {
   x: number;
@@ -35,21 +37,10 @@ export function initPortal(root: HTMLElement, siteConfig: SiteConfig) {
   const stage = required(root, ".qp-stage");
   const announcement = required(root, ".qp-announcement");
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  const systemAppearance = matchMedia("(prefers-color-scheme: dark)");
   const themeButtons = Array.from(
     root.querySelectorAll<HTMLButtonElement>("[data-theme-choice]"),
   );
-  const themeTrigger = required<HTMLButtonElement>(root, ".qp-theme-trigger"),
-    themeMenu = required(root, ".qp-theme-options");
-  let savedTheme: string | null = null;
-  try {
-    savedTheme = localStorage.getItem("ginkgo-theme");
-  } catch {}
-  const validThemes = ["light", "dark", "system"];
-  let themePreference =
-    savedTheme && validThemes.includes(savedTheme)
-      ? savedTheme
-      : siteConfig.defaultTheme;
+  const themeTrigger = required<HTMLButtonElement>(root, ".qp-theme-trigger");
 
   const config = siteConfig.motion;
   const fields = [
@@ -121,58 +112,14 @@ export function initPortal(root: HTMLElement, siteConfig: SiteConfig) {
   const clamp = (v: number, min: number, max: number) =>
     Math.max(min, Math.min(max, v));
   const motion = () => config.responsiveMotion && !reduced.matches;
-  function applyTheme() {
-    const resolved =
-      themePreference === "system"
-        ? systemAppearance.matches
-          ? "dark"
-          : "light"
-        : themePreference;
-    if (entering && page.dataset.theme !== resolved) cancelEntry?.();
-    page.style.colorScheme = resolved;
-    page.dataset.theme = resolved;
-    document.documentElement.style.colorScheme = resolved;
-    document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute("content", resolved === "dark" ? "#162028" : "#f8fafb");
-    root
-      .querySelectorAll<HTMLElement>("[data-theme-icon]")
-      .forEach((icon) => (icon.hidden = icon.dataset.themeIcon !== resolved));
-    themeButtons.forEach((button) =>
-      button.setAttribute(
-        "aria-pressed",
-        String(button.dataset.themeChoice === themePreference),
-      ),
-    );
-  }
-  function closeThemeMenu(focus = false) {
-    themeMenu.hidden = true;
-    themeTrigger.setAttribute("aria-expanded", "false");
-    if (focus) themeTrigger.focus({ preventScroll: true });
-  }
-  themeTrigger.addEventListener("click", () => {
-    if (entering) return;
-    const open = themeMenu.hidden;
-    themeMenu.hidden = !open;
-    themeTrigger.setAttribute("aria-expanded", String(open));
+  const theme = initTheme(root, {
+    defaultTheme: siteConfig.defaultTheme,
+    blocked: () => entering,
+    beforeChange(resolved) {
+      if (entering && page.dataset.theme !== resolved) cancelEntry?.();
+    },
   });
-  document.addEventListener("pointerdown", (e) => {
-    if (
-      !(e.target as Element).closest?.("#ginkgo-wind-portal .qp-theme-switch")
-    )
-      closeThemeMenu();
-  });
-  root.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !themeMenu.hidden) {
-      closeThemeMenu(true);
-      e.preventDefault();
-    }
-  });
-  function persistTheme() {
-    try {
-      localStorage.setItem("ginkgo-theme", themePreference);
-    } catch {}
-  }
+  const closeThemeMenu = theme.close;
   root.addEventListener("ginkgo:gust", () => {
     announcement.textContent = "一阵风吹开了落叶。";
   });
@@ -334,6 +281,8 @@ export function initPortal(root: HTMLElement, siteConfig: SiteConfig) {
       return;
     }
     entering = true;
+    const targetUrl = destination(siteConfig.entries[p.el.dataset.entry as EntryId].url);
+    if (p.i === 2 && targetUrl) warmNotesPage(targetUrl);
     closeThemeMenu();
     themeTrigger.disabled = true;
     themeButtons.forEach((button) => (button.disabled = true));
@@ -346,6 +295,7 @@ export function initPortal(root: HTMLElement, siteConfig: SiteConfig) {
     lastFrame = 0;
     const animated = motion(),
       animations: Animation[] = [];
+    let navigating = false;
     let aborted = false,
       restored = false;
     const run = (
@@ -441,6 +391,20 @@ export function initPortal(root: HTMLElement, siteConfig: SiteConfig) {
         item.el.style.zIndex = String(3 - item.i);
       }
       page.classList.remove("qp-entering");
+    }
+    function finishEntry() {
+      restoreScene();
+      animations.forEach((a) => a.cancel());
+      veil.remove();
+      entering = false;
+      cancelEntry = null;
+      lastFrame = 0;
+      themeButtons.forEach((button) => (button.disabled = false));
+      themeTrigger.disabled = false;
+      if (layoutPending) {
+        layoutPending = false;
+        layout();
+      } else retarget();
     }
     try {
       if (animated) {
@@ -671,11 +635,20 @@ export function initPortal(root: HTMLElement, siteConfig: SiteConfig) {
         });
       }
       if (aborted) throw new Error("Entry cancelled");
-      const url = destination(
-        siteConfig.entries[p.el.dataset.entry as EntryId].url,
-      );
+      const url = targetUrl;
       if (url) {
-        window.location.assign(url);
+        if (p.i === 2 && animated) rememberNotesArrival(url, veil.style.background, config.transitionSpeed);
+        // Keep the final frame until the new document takes over. The former
+        // unconditional finally block restored the portal before navigation.
+        navigating = true;
+        cancelEntry = null;
+        window.addEventListener("pageshow", finishEntry, { once: true });
+        try { window.location.assign(url); }
+        catch (error) {
+          navigating = false;
+          window.removeEventListener("pageshow", finishEntry);
+          throw error;
+        }
         return;
       }
       veil.style.opacity = "1";
@@ -696,18 +669,7 @@ export function initPortal(root: HTMLElement, siteConfig: SiteConfig) {
         console.error(error);
       }
     } finally {
-      restoreScene();
-      animations.forEach((a) => a.cancel());
-      veil.remove();
-      entering = false;
-      cancelEntry = null;
-      lastFrame = 0;
-      themeButtons.forEach((button) => (button.disabled = false));
-      themeTrigger.disabled = false;
-      if (layoutPending) {
-        layoutPending = false;
-        layout();
-      } else retarget();
+      if (!navigating) finishEntry();
     }
   }
   page.addEventListener("pointermove", (e) => {
@@ -748,6 +710,13 @@ export function initPortal(root: HTMLElement, siteConfig: SiteConfig) {
     }
   });
   for (const p of parts) {
+    const warm = () => {
+      if (p.i !== 2) return;
+      const url = destination(siteConfig.entries.notes.url);
+      if (url) warmNotesPage(url);
+    };
+    p.el.addEventListener("pointerenter", warm, { once: true });
+    p.el.addEventListener("focus", warm, { once: true });
     p.el.addEventListener("pointerenter", (e) => {
       if (entering || e.pointerType === "touch") return;
       active = p.i;
@@ -812,31 +781,12 @@ export function initPortal(root: HTMLElement, siteConfig: SiteConfig) {
       if (e.key === "Enter" || e.key === " ") p.ignoreClick = false;
     });
   }
-  themeButtons.forEach((button) =>
-    button.addEventListener("click", () => {
-      if (entering) return;
-      themePreference = button.dataset.themeChoice!;
-      applyTheme();
-      closeThemeMenu(true);
-      persistTheme();
-      announcement.textContent =
-        themePreference === "system"
-          ? "外观已跟随系统。"
-          : themePreference === "light"
-            ? "已切换为白色模式。"
-            : "已切换为深色模式。";
-    }),
-  );
-  systemAppearance.addEventListener("change", () => {
-    if (themePreference === "system") applyTheme();
-  });
   window.addEventListener("pageshow", (event) => {
     if (event.persisted) {
       cancelEntry?.();
       retarget();
     }
   });
-  applyTheme();
   layout();
   // Layout depends on width. Ignore the height we set ourselves, and perform
   // writes in the next frame instead of inside ResizeObserver delivery.

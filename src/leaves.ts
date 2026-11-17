@@ -1,5 +1,6 @@
 import type { LeafConfig } from "./config";
-import { required } from "./dom";
+import { required } from "./dom.ts";
+import { bindWindControl, readLeavesPaused } from "./wind-control.ts";
 
 interface Point {
   x: number;
@@ -97,6 +98,7 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig, interaction:
     lastBrush = 0,
     wasEntering = false;
   let nextRefill = 0;
+  let generationPaused = readLeavesPaused();
 
   const color = (name: string) => {
     probe.style.color = "var(--leaf-" + name + ")";
@@ -402,7 +404,7 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig, interaction:
       c.width = Math.round(w * dpr);
       c.height = Math.round(h * dpr);
     }
-    seedLeaves(clearUntil > performance.now() / 1000);
+    seedLeaves(generationPaused || clearUntil > performance.now() / 1000);
     drawCanopy();
     render(performance.now() / 1000);
     start();
@@ -432,7 +434,7 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig, interaction:
     };
   }
   function update(dt: number, now: number) {
-    if (now > nextBreeze && now > clearUntil) {
+    if (!generationPaused && now > nextBreeze && now > clearUntil) {
       nextBreeze = now + 7 + random() * 6;
       const resting = leaves.filter((l) => l.alive && l.z === 0);
       for (let n = 0; n < Math.min(2, resting.length); n++) {
@@ -446,7 +448,7 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig, interaction:
     }
     for (const l of leaves) {
       if (!l.alive) {
-        if (now > l.returnAt && now > clearUntil && now > nextRefill) {
+        if (!generationPaused && now > l.returnAt && now > clearUntil && now > nextRefill) {
           respawn(l);
           nextRefill = now + Math.max(0.05, settings.refillInterval);
         }
@@ -586,10 +588,10 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig, interaction:
     lastTime = nowMs;
     if (!reduced.matches) update(dt, nowMs / 1000);
     render(nowMs / 1000);
-    if (!reduced.matches) raf = requestAnimationFrame(tick);
+    if (!reduced.matches && (!generationPaused || leaves.some(leaf => leaf.alive) || gusts.length)) raf = requestAnimationFrame(tick);
   }
   function start() {
-    if (!raf && visible && !document.hidden) {
+    if (!raf && visible && !document.hidden && (!generationPaused || leaves.some(leaf => leaf.alive) || gusts.length)) {
       lastTime = 0;
       raf = requestAnimationFrame(tick);
     }
@@ -793,7 +795,25 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig, interaction:
   eventTarget.addEventListener("pointerleave", () => {
     lastPointer = null;
   });
-  windButton.addEventListener("click", () => clearAll());
+  bindWindControl(windButton, {
+    clear: () => clearAll(),
+    pausedChanged(paused) {
+      generationPaused = paused;
+      if (paused) clearAll(false);
+      else {
+        clearUntil = 0;
+        nextRefill = 0;
+        nextBreeze = performance.now() / 1000 + 7;
+        if (reduced.matches) seedLeaves(false);
+        render(performance.now() / 1000);
+        start();
+      }
+      const status = root.querySelector<HTMLElement>(".qp-announcement, #announcement");
+      if (status) status.textContent = paused
+        ? "银杏叶生成已暂停。再次长按吹风按钮可恢复。"
+        : "银杏叶生成已恢复。";
+    },
+  });
   new MutationObserver((records) => {
     if (records.some((r) => r.attributeName === "data-theme")) updatePalette();
     const entering = page.classList.contains("qp-entering");
@@ -822,9 +842,16 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig, interaction:
       raf = 0;
     } else start();
   });
+  window.addEventListener("pagehide", () => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    lastTime = 0;
+  });
+  window.addEventListener("pageshow", () => start());
   reduced.addEventListener("change", () => {
     if (reduced.matches) {
       leaves.forEach((l) => {
+        if (generationPaused) l.alive = false;
         l.arrival = undefined;
         l.vx = 0;
         l.vy = 0;

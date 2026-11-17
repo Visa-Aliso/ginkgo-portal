@@ -11,6 +11,12 @@
     <title>银杏与风</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script>
+      const html = document.documentElement;
+      html.classList.add("portal-loading");
+      html.dataset.portalBootTimer = String(setTimeout(() => {
+        html.classList.remove("portal-loading");
+        delete html.dataset.portalBootTimer;
+      }, 4000));
       try {
         const preference = localStorage.getItem("ginkgo-theme") || "system";
         const dark =
@@ -20,6 +26,7 @@
         document.documentElement.style.colorScheme = dark ? "dark" : "light";
       } catch {}
     </script>
+    <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
     <div id="ginkgo-wind-portal">
@@ -32,9 +39,11 @@
             <button
               type="button"
               class="qp-wind-button cursor-interaction"
-              aria-label="吹开所有银杏叶"
+              aria-label="单击吹开银杏叶，长按暂停生成"
+              title="单击吹风，长按暂停或恢复银杏叶"
             >
               <i data-lucide="wind" aria-hidden="true"></i>
+              <svg class="wind-hold-ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" /></svg>
             </button>
             <div class="qp-theme-switch">
               <button

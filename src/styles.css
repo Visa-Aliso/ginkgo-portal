@@ -1,3 +1,5 @@
+@import "./controls.css";
+
 #ginkgo-wind-portal {
   width: 100%;
 }
@@ -933,6 +935,11 @@ button:disabled {
 #ginkgo-wind-portal .qp-stage {
   flex: none;
   margin: 68px auto 40px;
+  transition: opacity .4s ease;
+}
+html.portal-loading #ginkgo-wind-portal .qp-stage {
+  opacity: 0;
+  visibility: hidden;
 }
 #ginkgo-wind-portal .qp-window {
   touch-action: pan-y;
@@ -980,6 +987,7 @@ button:disabled {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  #ginkgo-wind-portal .qp-stage,
   #ginkgo-wind-portal .qp-wind-button,
   #ginkgo-wind-portal .qp-theme-trigger {
     transition: none;

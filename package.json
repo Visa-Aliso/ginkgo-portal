@@ -7,10 +7,13 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "check": "tsc --noEmit",
-    "test:motion": "node --experimental-strip-types --test tests/motion.test.mjs",
-    "build": "npm run check && vite build",
+    "dev": "npm run check:content && vite --host 127.0.0.1",
+    "check": "tsc --noEmit && npm run check:content",
+    "check:content": "node --experimental-strip-types scripts/check-content.mjs",
+    "test": "node --experimental-strip-types --test",
+    "test:motion": "node --experimental-strip-types --test tests/motion.test.mjs tests/page-transition.test.mjs",
+    "build": "npm run check && vite build && node scripts/check-build.mjs",
+    "verify": "npm test && npm run build",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {

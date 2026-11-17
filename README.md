@@ -17,6 +17,8 @@ Open the local URL shown in the terminal. To check types, build for production, 
 
 ```sh
 npm run check
+npm test
+npm run verify
 npm run build
 npm run preview
 ```
@@ -53,6 +55,7 @@ Colors are defined with CSS variables in `src/styles.css`: `--qp-*` controls the
 - Moving the mouse gently brushes nearby leaves. Clicking a leaf or an empty area creates a local gust; the wind button in the upper-right corner clears the page.
 - Clicking a leaf covering an entry blows the leaf away first, preventing accidental navigation. Uncovered entry areas respond normally.
 - Entries with empty URLs return to their original positions after the preview animation. Press Escape to cancel an opening animation.
+- Hold the wind button for 700ms to clear leaves and pause generation; hold again to resume. A progress ring and pause badge show the state. Touch and Space/Enter holds are supported. The preference persists across both pages, refreshes and history navigation.
 - Theme preferences are saved in the browser. Theme switching still works when local storage is unavailable.
 - Animations pause when the page is not visible. With reduced motion enabled, continuous movement stops and gusts clear leaves immediately.
 - Mobile devices use separate leaf counts and a capped rendering pixel ratio. Toolbar buttons provide 44px touch targets on devices with coarse pointers.
@@ -61,6 +64,22 @@ Colors are defined with CSS variables in `src/styles.css`: `--qp-*` controls the
 
 - `src/config.ts`: everyday settings and type definitions
 - `src/main.ts`: content and icon initialization
-- `src/portal.ts`: themes, spring motion, opening animations, and navigation
+- `src/portal.ts`: spring motion, opening animations, and navigation
 - `src/leaves.ts`: leaf rendering, wind, replenishment, and hit detection
 - `src/styles.css`: surface appearance, layout, and light/dark palettes
+
+- `src/notes.ts`, `src/notes.css`: notes list, reader and page layout
+- `src/notes-motion.ts`, `src/reader-motion.ts`: card and reader transitions
+- `src/page-transition.ts`: document preloading and portal-to-notes handoff
+- `src/theme.ts`, `src/preferences.ts`: shared appearance controls and storage
+- `src/wind-control.ts`, `src/controls.css`: shared hold gesture and status display
+- `src/notes-data.ts`, `src/note-content.ts`: content discovery and validation
+- `src/content/notes/`: Markdown notes and authoring template
+- `scripts/`: pre-build content checks and post-build asset checks
+- `tests/`: content, gesture, engine, theme and motion regressions
+
+## Verification and release
+
+Run `npm run verify` before publishing: it executes all tests, TypeScript checks, Markdown validation, the production build, and build-output checks. Both documents load their styles from HTML rather than waiting for JavaScript. Publish the entire `dist/` directory and use `npm run preview` for a production-mode visual check.
+
+See [the architecture and maintenance notes](docs/architecture.md) for lifecycle details and browser checks. Automated checks do not replace visual verification on real browsers.

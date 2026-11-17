@@ -1,3 +1,5 @@
+@import "./controls.css";
+
 :root {
   --notes-bg: light-dark(#f8fafb, #162028);
   --notes-ink: light-dark(#34434f, #e2eaf0);
@@ -15,6 +17,7 @@
 * { box-sizing: border-box; }
 html { scrollbar-gutter: stable; }
 body { margin: 0; min-width: 320px; }
+.notes-arrival-cover { position: fixed; inset: 0; z-index: 2147483647; pointer-events: none; transform-origin: left top; will-change: transform, opacity; }
 a { color: inherit; text-decoration: none; }
 button:not(:disabled), a[href] { cursor: pointer; }
 button:disabled { cursor: default; }

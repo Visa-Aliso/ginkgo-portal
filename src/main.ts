@@ -3,7 +3,6 @@ import { siteConfig, type EntryId } from "./config";
 import { required, destination } from "./dom";
 import { initPortal } from "./portal";
 import { initLeaves } from "./leaves";
-import "./styles.css";
 
 const root = required(document, "#ginkgo-wind-portal");
 const header = required(root, ".qp-header");
@@ -33,4 +32,8 @@ createIcons({
   attrs: { width: 18, height: 18, "stroke-width": 1.5 },
 });
 initPortal(root, siteConfig);
+// Reveal only after layout() has assigned card sizes and positions.
+clearTimeout(Number(document.documentElement.dataset.portalBootTimer));
+delete document.documentElement.dataset.portalBootTimer;
+document.documentElement.classList.remove("portal-loading");
 initLeaves(root, siteConfig.leaves);

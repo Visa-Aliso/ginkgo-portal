@@ -1,12 +1,13 @@
 import { ArrowUpLeft, ArrowUpRight, ArrowLeft, ArrowRight, Sun, Moon, Monitor, Wind, Search, Feather, X, createIcons } from "lucide";
 import { required } from "./dom";
-import { siteConfig, type ThemePreference } from "./config";
+import { siteConfig } from "./config";
+import { initTheme } from "./theme.ts";
 import { initLeaves } from "./leaves";
 import { notes } from "./notes-data";
 import { markdownToHtml } from "./markdown";
 import { createReaderMotion } from "./reader-motion";
 import { createCollectionMotion, createPaperMotion } from "./notes-motion";
-import "./notes.css";
+import { enterNotes } from "./page-transition";
 
 const root = required(document, "#ginkgo-notes");
 const grid = required(root, "#notes-grid");
@@ -176,44 +177,19 @@ previous.addEventListener("click", () => { if (!closing && selectedIndex > 0) lo
 next.addEventListener("click", () => { if (!closing && selectedIndex < notes.length - 1) location.hash = `note=${encodeURIComponent(notes[selectedIndex + 1].id)}`; });
 window.addEventListener("hashchange", syncReader);
 
-const themeTrigger = required<HTMLButtonElement>(root, "#theme-trigger");
-const themeMenu = required(root, "#theme-menu");
-const systemTheme = matchMedia("(prefers-color-scheme: dark)");
-const themeButtons = [...root.querySelectorAll<HTMLButtonElement>("button[data-theme]")];
-let theme: ThemePreference = siteConfig.defaultTheme;
-try {
-  const stored = localStorage.getItem("ginkgo-theme");
-  if (stored === "light" || stored === "dark" || stored === "system") theme = stored;
-} catch {}
-function applyTheme() {
-  const resolved = theme === "system" ? systemTheme.matches ? "dark" : "light" : theme;
-  document.documentElement.style.colorScheme = resolved;
-  required(root, ".qp-page").dataset.theme = resolved;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", resolved === "dark" ? "#162028" : "#f8fafb");
-  root.querySelectorAll<HTMLElement>("[data-theme-icon]").forEach(node => node.toggleAttribute("hidden", node.dataset.themeIcon !== resolved));
-  themeButtons.forEach(button => button.setAttribute("aria-pressed", String(button.dataset.theme === theme)));
-}
-function closeTheme(focus = false) { themeMenu.hidden = true; themeTrigger.setAttribute("aria-expanded", "false"); if (focus) themeTrigger.focus(); }
-themeTrigger.addEventListener("click", () => { themeMenu.hidden = !themeMenu.hidden; themeTrigger.setAttribute("aria-expanded", String(!themeMenu.hidden)); });
-themeButtons.forEach(button => button.addEventListener("click", () => {
-  theme = button.dataset.theme as ThemePreference;
-  try { localStorage.setItem("ginkgo-theme", theme); } catch {}
-  applyTheme(); closeTheme(true);
-}));
-systemTheme.addEventListener("change", applyTheme);
-document.addEventListener("pointerdown", event => { if (!(event.target as Element).closest(".theme-switch")) closeTheme(); });
+initTheme(root, { defaultTheme: siteConfig.defaultTheme });
 document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && !themeMenu.hidden) closeTheme(true);
   if (event.key === "/" && !dialog.open && !event.ctrlKey && !event.metaKey && !event.altKey && !(event.target as Element).closest("input, textarea, [contenteditable]")) { event.preventDefault(); search.focus(); }
 });
 root.addEventListener("ginkgo:gust", () => { paperMotion.release(); required(root, "#announcement").textContent = "风吹过，银杏叶轻轻散开。"; });
 
 render();
-applyTheme();
 initLeaves(root, { ...siteConfig.leaves, desktopCount: 28, mobileCount: 14, size: .8 }, {
   target: root,
   cardSelector: ".note-link",
   ignoreSelector: ".site-header, .collection-toolbar, button, input, dialog, .note-ghost",
   enabled: () => !dialog.open,
 });
-syncReader();
+void enterNotes(root)
+  .catch(error => console.warn("Notes arrival animation skipped:", error))
+  .then(syncReader);
