@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 
@@ -30,3 +30,12 @@ const profileCssPath = profileHtml.match(/<link[^>]+href="([^"]+\.css)"/)[1];
 const profileCss = readFileSync(resolve(root, 'dist', profileCssPath), 'utf8');
 assert.ok(!profileCss.includes('.note-link') && !profileCss.includes('.reader-article'), 'Profile must not include Notes card or reader styles');
 console.log('Validated compiled first-paint config, noninteractive breadcrumbs, and isolated Profile styles.');
+
+// Runtime theme switching needs native light-dark(); Lightning CSS's old-target
+// polyfill concatenates two colors and invalidates every themed value.
+for (const name of readdirSync(resolve(root, 'dist/assets')).filter((file) => file.endsWith('.css'))) {
+  const css = readFileSync(resolve(root, 'dist/assets', name), 'utf8');
+  assert.ok(!css.includes('lightningcss-light'), `${name}: light-dark() was lowered; set build.cssTarget`);
+  assert.ok(css.includes('light-dark('), `${name}: expected native light-dark() colors`);
+}
+console.log('Validated native light-dark() colors in built CSS.');

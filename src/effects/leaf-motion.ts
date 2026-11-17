@@ -1,7 +1,7 @@
 /** Keep decorative bitmap allocations bounded, including on 4K / high-DPI screens. */
-export function leafSurfaceRatios(width: number, height: number, deviceRatio: number, limit: number) {
+export function leafSurfaceRatios(width: number, height: number, deviceRatio: number, limit: number, budget = 2_097_152) {
   const area = Math.max(1, width * height);
-  const foreground = Math.min(deviceRatio || 1, limit, Math.sqrt(2_097_152 / area));
+  const foreground = Math.min(deviceRatio || 1, limit, Math.sqrt(budget / area));
   const canopy = Math.min(foreground, .5, Math.sqrt(262_144 / area));
   return { foreground, canopy };
 }

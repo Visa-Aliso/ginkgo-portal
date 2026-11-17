@@ -27,6 +27,8 @@ export interface LeafConfig {
   /** Rendering limits that reduce power consumption on mobile devices. */
   maxFps: number;
   maxPixelRatio: number;
+  /** Maximum foreground canvas pixels. Lower values trade leaf sharpness for memory. */
+  pixelBudget: number;
 }
 
 export interface SiteConfig {

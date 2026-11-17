@@ -45,7 +45,8 @@ Edit `config/site.config`, `config/profile.config`, and `config/notes.config` fo
 | `leaves.pointerRadius` | 90 | Radius of the mouse's influence on leaves, in pixels |
 | `leaves.clickRadius` | 225 | Click-induced gust radius; automatically reduced on mobile |
 | `leaves.size` | 1 | Leaf size multiplier |
-| `leaves.maxFps` | 45 | Maximum leaf rendering frame rate |
+| `leaves.maxFps` | 60 | Maximum leaf rendering frame rate |
+| `leaves.pixelBudget` | 1048576 | Foreground canvas pixel budget; lower saves memory |
 | `motion.transitionSpeed` | 1 | Entry animation speed multiplier; higher values are faster |
 
 Colors are defined with CSS variables in `src/pages/portal/styles.css`: `--qp-*` controls the paper surfaces and background, while `--leaf-*` controls the ginkgo leaves. Leaf shapes, veins, and shadows are drawn with Canvas and require no image assets.

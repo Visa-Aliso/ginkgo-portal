@@ -43,7 +43,8 @@ npm run preview
 | `leaves.pointerRadius`   | 90       | 鼠标拨动叶子的影响范围，单位 px      |
 | `leaves.clickRadius`     | 225      | 点击吹风范围，手机自动缩小           |
 | `leaves.size`            | 1        | 叶子尺寸倍率                         |
-| `leaves.maxFps`          | 45       | 叶子绘制频率上限                     |
+| `leaves.maxFps`          | 60       | 叶子绘制频率上限                     |
+| `leaves.pixelBudget`     | 1048576  | 前景画布像素预算；越小越省内存       |
 | `motion.transitionSpeed` | 1        | 入口动画速度倍率，越大越快           |
 
 颜色在 `src/pages/portal/styles.css` 中集中使用 CSS 变量：`--qp-*` 控制纸页与背景，`--leaf-*` 控制银杏。叶子形状、叶脉和阴影由 Canvas 绘制，无需额外图片。

@@ -61,7 +61,7 @@ test('paused engine stays empty after resize, theme change and history return; r
   const root = new Element(), page = new Element(), foreground = canvas(), canopy = canvas(), button = new Element(), status = new Element();
   page.clientWidth = 800; page.clientHeight = 600; page.dataset.theme = 'light';
   root.querySelector = selector => ({ '.qp-page': page, '.qp-leaves': foreground, '.qp-canopy': canopy, '.qp-wind-button': button, '.qp-announcement, #announcement': status })[selector] ?? null;
-  initLeaves(root, { enabled: true, desktopCount: 8, mobileCount: 4, mobileBreakpoint: 600, size: 1, refillDelay: 4, refillInterval: .32, breezeSpeed: 1, gustStrength: 1, pointerRadius: 90, clickRadius: 225, maxFps: 60, maxPixelRatio: 2 });
+  initLeaves(root, { enabled: true, desktopCount: 8, mobileCount: 4, mobileBreakpoint: 600, size: 1, refillDelay: 4, refillInterval: .32, breezeSpeed: 1, gustStrength: 1, pointerRadius: 90, clickRadius: 225, maxFps: 60, maxPixelRatio: 2, pixelBudget: 1_048_576 });
   const advance = milliseconds => {
     const end = time + milliseconds;
     while (time < end) {
@@ -90,7 +90,7 @@ test('paused engine stays empty after resize, theme change and history return; r
   assert.ok(foreground.context.renders - initialRenders >= 29, '60 Hz motion does not accidentally skip every other frame');
   for (let attempt = 0; attempt < 160 && frames.size; attempt++) advance(250);
   assert.ok(foreground.context.drawCount > 0);
-  assert.equal(foreground.width, Math.floor(page.clientWidth * leafSurfaceRatios(page.clientWidth, page.clientHeight, 2, 2).foreground));
+  assert.equal(foreground.width, Math.floor(page.clientWidth * leafSurfaceRatios(page.clientWidth, page.clientHeight, 2, 2, 1_048_576).foreground));
   assert.equal(canopy.width, page.clientWidth * .5);
   assert.equal(frames.size, 0, 'settled leaves sleep instead of drawing continuously');
   assert.equal(timers.size, 1, 'one wake-up for the next breeze');
@@ -151,12 +151,14 @@ test('paused engine stays empty after resize, theme change and history return; r
   assert.equal(frames.size, 0);
 });
 
-test('decorative bitmaps stay within their budgets at high DPI and 4K', () => {
-  for (const [w, h, dpr] of [[390, 844, 3], [1920, 1080, 2], [3840, 2160, 3], [7680, 4320, 2]]) {
-    const ratios = leafSurfaceRatios(w, h, dpr, 1.25);
-    assert.ok(Math.floor(w * ratios.foreground) * Math.floor(h * ratios.foreground) <= 2_097_152);
-    assert.ok(Math.floor(w * ratios.canopy) * Math.floor(h * ratios.canopy) <= 262_144);
-    assert.ok(ratios.foreground <= 1.25 && ratios.canopy <= .5);
+test('decorative bitmaps stay within their configured budgets at high DPI and 4K', () => {
+  for (const budget of [1_048_576, 2_097_152, 4_194_304]) {
+    for (const [w, h, dpr] of [[390, 844, 3], [1920, 1080, 2], [3840, 2160, 3], [7680, 4320, 2]]) {
+      const ratios = leafSurfaceRatios(w, h, dpr, 1.25, budget);
+      assert.ok(Math.floor(w * ratios.foreground) * Math.floor(h * ratios.foreground) <= budget);
+      assert.ok(Math.floor(w * ratios.canopy) * Math.floor(h * ratios.canopy) <= 262_144);
+      assert.ok(ratios.foreground <= 1.25 && ratios.canopy <= .5);
+    }
   }
 });
 

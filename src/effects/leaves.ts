@@ -291,7 +291,7 @@ export function initLeaves(root: HTMLElement, settings: LeafConfig, interaction:
     const w = page.clientWidth,
       h = page.clientHeight;
     if (!w || !h) { releaseSurfaces(); return; }
-    const ratios = leafSurfaceRatios(w, h, devicePixelRatio, settings.maxPixelRatio);
+    const ratios = leafSurfaceRatios(w, h, devicePixelRatio, settings.maxPixelRatio, settings.pixelBudget || 2_097_152);
     const ratio = ratios.foreground;
     if (w === width && h === height && dpr === ratio && sprites.length) return;
     const oldWidth = width, oldHeight = height;

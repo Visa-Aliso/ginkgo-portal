@@ -12,6 +12,7 @@ test('independent config files preserve all page defaults and placeholder data',
   assert.equal(site.entries.profile.url, './profile.html');
   assert.equal(profile.name, 'Ginkgo');
   assert.equal(profile.leavesPaused, true);
+  assert.equal(site.leaves.pixelBudget, 1_048_576);
   assert.equal(profile.sections.length, 5);
   assert.ok(profile.sections.every(section => section.items.length));
   assert.ok(notes.leaves.desktopCount < site.leaves.desktopCount);
@@ -22,6 +23,7 @@ test('bad JSON, unsafe links, invalid physics and unknown keys fail with field p
     [site => { site.motion.softness = 0; }, /motion.softness/],
     [site => { site.motion.transitionSpeed = 0; }, /motion.transitionSpeed/],
     [site => { site.leaves.mobileCount = 2.5; }, /leaves.mobileCount/],
+    [site => { site.leaves.pixelBudget = 1.5; }, /leaves.pixelBudget/],
     [site => { site.defaultTheme = 'night'; }, /defaultTheme/],
     [site => { site.entries.profile.url = 'javascript:alert(1)'; }, /entries.profile.url/],
     [site => { site.leavs = {}; }, /leavs/],

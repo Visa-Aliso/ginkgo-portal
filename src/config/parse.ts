@@ -76,6 +76,7 @@ export function parseSiteConfig(raw: string): SiteConfig {
     desktopCount: [0, 120, true], mobileCount: [0, 120, true], mobileBreakpoint: [320, 2000], size: [.1, 3],
     refillDelay: [0, 120], refillInterval: [.05, 60], breezeSpeed: [0, 5], gustStrength: [0, 5],
     pointerRadius: [0, 600], clickRadius: [0, 1000], maxFps: [15, 60], maxPixelRatio: [.5, 3],
+    pixelBudget: [262_144, 4_194_304, true],
   };
   keys(leaves, ["enabled", ...Object.keys(ranges)], `${file}.leaves`);
   for (const [key, range] of Object.entries(ranges)) number(leaves[key], `${file}.leaves.${key}`, ...range);
